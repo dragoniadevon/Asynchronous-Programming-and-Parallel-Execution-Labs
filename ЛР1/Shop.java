@@ -26,22 +26,34 @@ public class Shop {
         for (int page = 1; page <= PAGES; page++) loadPage(page);
         seconds("час", t0);
 
-        // Частина 2. Ті самі сторінки у чотирьох потоках.
+
+
+        // Частина 2. Паралельно
         System.out.println("\nу 4 потоки:");
         t0 = System.nanoTime();
 
-        // TODO [П1]: дописати паралельну частину, близько 10 рядків.
-        //   1) створити масив Thread[THREADS]
-        //   2) роздавати сторінки через крок, як карти з колоди: потік me бере
-        //      сторінки me + 1, me + 1 + THREADS, me + 1 + 2 * THREADS, ...
-        //      такий розподіл працює для будь-якої кількості сторінок
-        //   3) кожен потік отримує ім'я "каталог-1" ... "каталог-4"
-        //   4) Java не дасть захопити змінну циклу в лямбду:
-        //      всередині циклу потрібен рядок final int me = t;
-        //   5) спершу всі start(), і тільки потім усі join()
+// 1) створюємо масив потоків
+        Thread[] threads = new Thread[THREADS];
+
+// 2) роздаємо сторінки через крок
+        for (int t = 0; t < THREADS; t++) {
+            final int me = t; // 4) потрібен final
+            threads[t] = new Thread(() -> {
+                for (int page = me + 1; page <= PAGES; page += THREADS) {
+                    loadPage(page);
+                }
+            }, "каталог-" + (me + 1)); // 3) ім’я потоку
+        }
+
+// 5) спершу всі start()
+        for (Thread thread : threads) thread.start();
+// потім усі join()
+        for (Thread thread : threads) thread.join();
 
         System.out.println("усі " + PAGES + " сторінок готові");
         seconds("час", t0);
+
+
     }
 
     /** Одна сторінка каталогу: постачальник відповідає приблизно за секунду. */
