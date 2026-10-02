@@ -1,2 +1,7 @@
 */.idea/
 *.iml
+.idea/
+out/
+*.class
+*.iml
+Asynchronous-Programming-and-Parallel-Execution-Labs/

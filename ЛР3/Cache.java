@@ -70,13 +70,14 @@ public class Cache {
             //   Функція виконується рівно один раз на ключ, решта потоків чекає на її
             //   результат. Дві атомарні операції поспіль тут не страшні: лічильник і
             //   значення живуть окремо, і гонка між ними нічого не ламає.
-            return null;
+            hits.merge(symbol, 1, Integer::sum);
+            return map.computeIfAbsent(symbol, s -> quote(s));
         }
 
         /** Скільки разів кеш просили саме цей символ. */
         int hits(String symbol) {
             // TODO B [П3]: одне число з мапи hits, а якщо ключа ще немає, нуль.
-            return 0;
+            return hits.getOrDefault(symbol, 0);
         }
     }
 
@@ -95,11 +96,14 @@ public class Cache {
         //   у finally. Пам'ятайте з лекції: два різні lock на pay і refund
         //   захищають кожен своє, а разом не захищають нічого.
 
-        void pay() { }
+        private int wallet = 1000;
+        private int cashbox = 1000;
 
-        void refund() { }
+        synchronized void pay() { wallet--; cashbox++; }
 
-        int total() { return 0; }
+        synchronized void refund() { wallet++; cashbox--; }
+
+        synchronized int total() { return wallet + cashbox; }
     }
 
     public static void main(String[] args) throws InterruptedException {
