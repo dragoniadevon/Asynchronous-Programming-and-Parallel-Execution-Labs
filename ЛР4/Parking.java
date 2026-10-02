@@ -45,15 +45,21 @@ public class Parking {
         return path + " готово";
     }
 
-    static String enter(String path) throws InterruptedException {
+
         // TODO [П4-А]: впустити в work() не більше PERMITS потоків одночасно.
         //   1) permits.acquire() до try, а не всередині нього;
         //   2) return work(path); усередині try;
         //   3) permits.release() у finally, і тільки там: work() інколи кидає
         //      виключення, і без finally дозвіл не повернеться (див. leaky());
         //   4) ліміт саме 5, а не 1: synchronized пропустив би по одному.
-        return work(path);
-    }
+        static String enter(String path) throws InterruptedException {
+            permits.acquire();
+            try {
+                return work(path);
+            } finally {
+                permits.release();
+            }
+        }
 
     /** Як не треба. Не правити: це контрприклад у звіті. */
     static String leaky(String path) throws InterruptedException {
@@ -82,9 +88,9 @@ public class Parking {
     }
 
     static void leave() {
-        synchronized (TILL) {
+        synchronized (GATE) {
             hold();
-            synchronized (GATE) { paid++; }
+            synchronized (TILL) { paid++; }
         }
     }
 
