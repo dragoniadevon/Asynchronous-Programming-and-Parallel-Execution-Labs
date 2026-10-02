@@ -51,7 +51,7 @@ public class Pool {
     // ------------------------------------------------------- єдиний TODO
 
     /** Виконати всі REQUESTS запитів на пулі розміром size. Повертає витрачений час у мс. */
-    static long runOnPool(int size, CountingFactory factory) throws Exception {
+
         // TODO [П5]: близько 12 рядків.
         //   1) ExecutorService pool = Executors.newFixedThreadPool(size, factory);
         //      фабрику передати обов'язково, інакше колонка «створено» буде нульова;
@@ -63,7 +63,25 @@ public class Pool {
         //   5) pool.shutdown() і pool.awaitTermination(5, TimeUnit.SECONDS);
         //      без shutdown потоки пула лишаються живі, і JVM не завершується;
         //   6) повернути System.currentTimeMillis() - t0.
-        return 0;
+
+    static long runOnPool(int size, CountingFactory factory) throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(size, factory);
+        long t0 = System.currentTimeMillis();
+
+        List<Future<String>> futures = new ArrayList<>();
+        for (int i = 0; i < REQUESTS; i++) {
+            final String path = "/сторінка/" + i;
+            futures.add(pool.submit(() -> fetch(path)));
+        }
+
+        for (Future<String> f : futures) {
+            f.get();
+        }
+
+        pool.shutdown();
+        pool.awaitTermination(5, TimeUnit.SECONDS);
+
+        return System.currentTimeMillis() - t0;
     }
 
     // ---------------------------------------------------------- дано нижче
